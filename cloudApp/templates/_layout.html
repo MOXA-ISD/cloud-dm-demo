@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Moxa Cloud DM Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- App Favicon -->
+    <link rel="shortcut icon" href="/static/images/ThingsPro-Logo.ico">
+
+    <!-- App CSS -->
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="/static/css/core.css" rel="stylesheet" type="text/css" />
+    <link href="/static/css/components.css" rel="stylesheet" type="text/css" />
+    <link href="/static/css/icons.css" rel="stylesheet" type="text/css" />
+    <link href="/static/css/pages.css" rel="stylesheet" type="text/css" />
+    <link href="/static/css/menu.css" rel="stylesheet" type="text/css" />
+    <link href="/static/css/responsive.css" rel="stylesheet" type="text/css" />
+
+    <link href="/static/plugins/toastr/toastr.min.css" rel="stylesheet" type="text/css" />
+    <link href="/static/plugins/bootstrap-sweetalert/sweet-alert.css" rel="stylesheet" />
+    <link href="/static/plugins/datatables/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="/static/plugins/datatables/buttons.bootstrap.min.css" rel="stylesheet" />
+    <link href="/static/plugins/datatables/fixedHeader.bootstrap.min.css" rel="stylesheet" />
+    <link href="/static/plugins/datatables/responsive.bootstrap.min.css" rel="stylesheet" />
+    <link href="/static/plugins/datatables/scroller.bootstrap.min.css" rel="stylesheet" />
+
+    <!--
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="/static/css/et-line.css" rel="stylesheet"/>
+    <link href="/static/css/ionicons.min.css" rel="stylesheet"/>
+    <link href="/static/css/slick.css" rel="stylesheet"/>
+    <link href="/static/css/magnific-popup.css" rel="stylesheet"/>
+    <link href="/static/css/animate.min.css" rel="stylesheet"/>
+    -->
+    <link href="/static/css/photo_custom.css" rel="stylesheet" />
+    <script src="/static/js/modernizr.min.js"></script>
+    <style>
+        canvas {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar-->
+    <header id="topnav">
+        <div class="topbar-main">
+            <div class="container header-nav">
+                <!-- LOGO -->
+                <div class="col-md-4 col-sm-4 col-xs-3">
+                    <div class="topbar-left">
+                        <a href="#" class="logo">
+                            <span><img src="/static/images/ThingsPro-Logo.png" id="userPic" alt="Logo"
+                                    style="height:70px;" /></span>
+                        </a>
+                    </div>
+                </div>
+                <!-- End Logo container-->
+
+                <div class="col-md-4 col-sm-4 col-xs-6">
+                    <h1 class="navTitle text-overflw" style="color: white; text-align: center; line-height:40px;">
+                        ThingsPro Cloud DM Demo</h1>
+                </div>
+
+                <div class="col-md-4 col-sm-4 col-xs-3">
+                    <div class="menu-extras">
+                        <ul class="nav navbar-nav navbar-right pull-right" style="float:right;">                           
+                        </ul>
+
+                        <div class="userinfo text-right" style="float:right;">
+                            </p>
+                            <p style="color: white; text-align: right"><strong><span>Author : Kevin Kao | Date :
+                                        2019-10</span></strong></p>
+                            <p style="color: white; text-align: right"><strong><span id="ping-pong"></span></strong></p>
+                        </div>
+
+                        <div class="menu-item">
+                            <!-- Mobile menu toggle-->
+                            <a class="navbar-toggle">
+                                <div class="lines">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </a>
+                            <!-- End mobile menu toggle-->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="navbar-custom" style="background-color: #D8F6CE;">
+                <div class="container menu-nav">
+                    <div id="navigation">
+                        <!-- Navigation Menu-->
+
+                        <ul class="navigation-menu">
+
+                            <li id="menuUserIcon" class="menu-li-hidden">                               
+                            </li>
+                        </ul>
+                        <!-- End navigation menu  -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- End Navigation Bar-->
+
+
+    <!-- jQuery  -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <!--<script src="/static/js/jquery.min.js"></script>-->
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/detect.js"></script>
+    <script src="/static/js/fastclick.js"></script>
+    <script src="/static/js/jquery.slimscroll.js"></script>
+    <script src="/static/js/jquery.blockUI.js"></script>
+    <script src="/static/js/waves.js"></script>
+    <script src="/static/js/wow.min.js"></script>
+    <script src="/static/js/jquery.nicescroll.js"></script>
+    <script src="/static/js/jquery.scrollTo.min.js"></script>
+
+    <script src="/static/plugins/toastr/toastr.min.js"></script>
+    <script src="/static/plugins/bootstrap-sweetalert/sweet-alert.min.js"></script>
+
+    <!-- App js -->
+    <script src="/static/js/jquery.core.js"></script>
+    <script src="/static/js/jquery.app.js"></script>
+
+    <script src="/static/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="/static/plugins/datatables/dataTables.bootstrap.js"></script>
+    <script src="/static/plugins/datatables/dataTables.buttons.min.js"></script>
+    <script src="/static/plugins/datatables/buttons.bootstrap.min.js"></script>
+    <script src="/static/plugins/datatables/jszip.min.js"></script>
+    <script src="/static/plugins/datatables/pdfmake.min.js"></script>
+    <script src="/static/plugins/datatables/vfs_fonts.js"></script>
+    <script src="/static/plugins/datatables/buttons.html5.min.js"></script>
+    <script src="/static/plugins/datatables/buttons.print.min.js"></script>
+    <script src="/static/plugins/datatables/dataTables.fixedHeader.min.js"></script>
+    <script src="/static/plugins/datatables/dataTables.keyTable.min.js"></script>
+    <script src="/static/plugins/datatables/dataTables.responsive.min.js"></script>
+    <script src="/static/plugins/datatables/responsive.bootstrap.min.js"></script>
+    <script src="/static/plugins/datatables/dataTables.scroller.min.js"></script>
+    <script src="/static/pages/datatables.init.js"></script>    
+
+    <div class="wrapper">
+        <div class="container">
+            <div id="popWindow" class="row" style="display:none;">
+            </div>
+
+            {% block content %}{% endblock %}
+
+            <hr />
+            <!-- Footer -->
+            <footer class="footer text-right">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            2019 © Moxa Ltd.
+                        </div>
+                        <div style="float:right">
+                            status: {{status}}
+                        </div>
+                    </div>
+                </div>
+            </footer>
+            <!-- End Footer -->
+        </div>
+    </div>
+</body>
+
+</html>

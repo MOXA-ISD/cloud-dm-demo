@@ -1,0 +1,1099 @@
+{% extends "_layout.html" %}
+{% block content %}
+
+<!-- Socket IO -->
+<script type="text/javascript" charset="utf-8">
+    var socket;
+    var roomId = "{{rtMessageRoomId}}";
+    $(document).ready(function () {
+        namespace = '';
+
+        // Connect to the Socket.IO server.           
+        socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace, { path: '/api/v1/rtmessage/socket.io' });
+
+        // On connection, join pre-defined room
+        socket.on('connect', function () {
+            socket.emit('join', { room: roomId });
+        });
+
+        // Event handler for server sent data.            
+        socket.on('onMessage', function (msg) {
+            //$('#log').html('Received : ' + JSON.stringify(msg.data) + '<br/>' + $('#log').html());
+            try {
+                var data = $.parseJSON(JSON.stringify(msg.data));
+                if (data.hasOwnProperty('connectionStatus')) {
+                    UpdateConnectionStatus(data.deviceId, data.connectionStatus);
+                }
+                if (data.hasOwnProperty('reportedProperties')) {
+                    UpdateReportProperties(data.deviceId, data.reportedProperties);
+                }
+                if (data.hasOwnProperty('message')) {
+                    UpdateDeviceMonitor(data.deviceId, data.message);
+                }
+            }
+            catch(err) {
+                return;
+            } 
+        });
+
+        // Interval function that tests message latency by sending a "ping"
+        // message. The server then responds with a "pong" message and the
+        // round trip time is measured.
+        var start_time;
+        window.setInterval(function () {
+            start_time = (new Date).getTime();
+            socket.emit('my_ping');
+        }, 10000);
+
+        // Handler for the "pong" message. When the pong is received, the
+        // time from the ping is stored, and the average of the last 30
+        // samples is average and displayed.
+        socket.on('my_pong', function () {
+            var latency = (new Date).getTime() - start_time;
+            data1 = Math.round(10 * latency) / 10;
+            data2 = Date().toString();
+            $('#ping-pong').text(data1.toString() + " ms; Time: " + data2);
+        });
+    });
+    function JoinRoom() {
+        socket.emit('join', { room: roomId });
+    }
+    function LeaveRoom() {
+        socket.emit('leave', { room: roomId });
+    }
+    function Disconnect() {
+        socket.emit('disconnect_request');
+    }
+</script>
+
+<!-- Device List-->
+<div class="row">
+    <div class="card-box table-responsive col-sm-12">
+        <div style="float:left">
+            <h4 class="header-title m-t-0 m-b-30">Moxa IIoT Gateway List</h4>
+        </div>
+        <div style="float:right">
+            <button id="RefreshDeviceListButton" class="btn btn-inverse waves-effect waves-light m-r-5"> <i
+                    class="ti-plus m-r-5"></i>
+                <span>Refresh</span> </button>
+        </div>
+        <div class="col-sm-12">
+            <table id="deviceListTable" name="deviceListTable"
+                class="table table-striped table-bordered dt-responsive nowrap">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Edge Name</th>
+                        <th>Host Name</th>
+                        <th>Status</th>
+                        <th>Model Name</th>
+                        <th>Firmware Version</th>
+                        <th>ThingsPro Version</th>
+                        <th>Uplink</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody id="deviceList"></tbody>
+            </table>
+        </div>
+    </div><!-- end col -->
+</div>
+
+<!-- Configurate -->
+<div class="row" id="configurateDiv" style="visibility: hidden;">
+    <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">
+                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseDetail"
+                    aria-expanded="true" aria-controls="collapseDetail">
+                </a>
+                <div style="float:left">
+                    <h4 id="EditingPanelTitle" class="header-title m-t-0 m-b-30">Configurate</h4>
+                </div>
+                <div style="float:right">
+                    <button id="UpdateDeviceConfigurationButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                        style="width:92px;"> <i class="ti-save m-r-5"></i> <span>Save</span> </button>
+                </div>
+            </div>
+            <div id="collapseDetail" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingDetail">
+                <div class="panel-body">
+                    <div class="row" style="margin-top: 4px;">
+                        <div class="col-sm-12">
+                            <form id="employee-form" class="form-horizontal" role="form" data-toggle="validator">
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            Device Type :
+                                        </label>
+                                        <label id="deviceTypeValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            Model Name :
+                                        </label>
+                                        <label id="modelNameValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            Firmware Version :
+                                        </label>
+                                        <label id="firmwareVersionValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            ThingsPro Version :
+                                        </label>
+                                        <label id="thingsproVersionValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="eName" class="col-sm-6 control-label">
+                                            WAN Interface :
+                                        </label>
+                                        <label id="wanValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            IP Address :
+                                        </label>
+                                        <label id="ipValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eName" class="col-sm-6 control-label">
+                                            Serial No :
+                                        </label>
+                                        <label id="serialNumberValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            Latest Updated At :
+                                        </label>
+                                        <label id="lastUpdatedAtValue" class="col-sm-6" style="margin-top: 8px;">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="eName" class="col-sm-6 control-label">
+                                            NTP Enable :
+                                        </label>
+                                        <div class="col-sm-6">
+                                            <input id="ntpEnableValue" type="text" value="" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            NTP Server :
+                                        </label>
+                                        <div class="col-sm-6">
+                                            <input id="ntpServerValue" type="text" value="" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eName" class="col-sm-6 control-label">
+                                            NTP Interval :
+                                        </label>
+                                        <div class="col-sm-6">
+                                            <input id="ntpIntervalValue" type="text" value="" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            Time Zone :
+                                        </label>
+                                        <div class="col-sm-6">
+                                            <input id="timeZoneValue" type="text" value="" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="eName" class="col-sm-6 control-label">
+                                            Host Name :
+                                        </label>
+                                        <div class="col-sm-6">
+                                            <input id="hostNameValue" type="text" value="" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eEquipId" class="col-sm-6 control-label">
+                                            Description :
+                                        </label>
+                                        <div class="col-sm-6">
+                                            <input id="descriptionValue" type="text" value="" class="form-control">
+                                        </div>
+                                    </div>
+                                    <label for="eEquipId" class="col-sm-6 control-label">
+                                        Status :
+                                    </label>
+                                    <label id="statusValue" class="col-sm-6" style="margin-top: 8px;">
+                                    </label>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-sm-3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end row -->
+
+<!-- Maintenance -->
+<div class="col-sm-2" id="maintenanceDiv" style="visibility:hidden; float: right;">
+    <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
+                <div style="float:left">
+                    <h4 id="EditingPanelTitle" class="header-title m-t-0 m-b-30">Maintenance</h4>
+                </div>
+            </div>
+            <div id="collapseDetail" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingDetail">
+                <div class="panel-body" style="margin-left: 5px;">
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="RebootDeviceButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"> <span>Reboot Device</span> </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="SoftwareUpgradeButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"> <span>Software Upgrade</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="MonitorEnableButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"> <span>Enable Monitor</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="MonitorDisableButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"><span>Disable Monitor</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Memory Monitor-->
+<div class="col-sm-3" id="memoryDiv" style="visibility: hidden; float:right">
+    <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
+                <div style="float:left">
+                    <h4 id="monitorMemoryH4" class="header-title m-t-0 m-b-30">Monitor - Memory</h4>
+                </div>
+            </div>
+            <div id="collapseDetail" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingDetail">
+                <div class="panel-body" style="margin-left: 5px;">
+                    <script src="http://chartjs.org/dist/2.9.3/Chart.min.js"></script>
+                    <script src="/static/js/ChartUtils.js"></script>
+                    <div id="canvas-holder" style="width:100%">
+                        <canvas id="chart-area"></canvas>
+                    </div>
+                    <script>
+                        var config_Memory = {
+                            type: 'doughnut',
+                            data: {
+                                datasets: [{
+                                    data: [0, 100],
+                                    backgroundColor: [
+                                        window.chartColors.red,
+                                        window.chartColors.white
+                                    ],
+                                    label: 'Memory Load%'
+                                }],
+                                labels: [
+                                    'Load',
+                                    'Available'
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                legend: {
+                                    position: 'top',
+                                },
+                                title: {
+                                    display: false,
+                                    text: 'Memory Load %'
+                                },
+                                animation: {
+                                    animateScale: true,
+                                    animateRotate: true
+                                }
+                            }
+                        };
+
+                        window.onload = function () {
+                            var ctx = document.getElementById('chart-area').getContext('2d');
+                            window.myDoughnut = new Chart(ctx, config_Memory);
+
+                            var ctx = document.getElementById('canvas').getContext('2d');
+                            window.myLine = new Chart(ctx, config_CPU);
+                        };                
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end row -->
+
+<!-- CPU Monitor -->
+<div class="col-sm-4" id="CPUDiv" style="visibility: hidden; float:right">
+    <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
+                <div style="float:left">
+                    <h4 id="monitorCPUH4" class="header-title m-t-0 m-b-30">Monitor - CPU</h4>
+                </div>
+            </div>
+            <div id="collapseDetail" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingDetail">
+                <div class="panel-body" style="margin-left: 5px;">
+                    <script src="http://chartjs.org/dist/2.9.3/Chart.min.js"></script>
+                    <script src="/static/js/ChartUtils.js"></script>
+                    <div style="width:100%;">
+                        <canvas id="canvas"></canvas>
+                    </div>
+                    <script>
+                        var config_CPU = {
+                            type: 'line',
+                            data: {
+                                labels: [],
+                                datasets: [{
+                                    label: 'CPU Loading %',
+                                    backgroundColor: window.chartColors.blue,
+                                    borderColor: window.chartColors.blue,
+                                    data: [],
+                                    fill: false,
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                title: {
+                                    display: false,
+                                    text: 'CPU'
+                                },
+                                tooltips: {
+                                    mode: 'index',
+                                    intersect: false,
+                                },
+                                hover: {
+                                    mode: 'nearest',
+                                    intersect: true
+                                },
+                                scales: {
+                                    xAxes: [{
+                                        display: false,
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: 'Time'
+                                        }
+                                    }],
+                                    yAxes: [{
+                                        display: true,
+                                        ticks: {
+                                            beginAtZero: true,
+                                            steps: 10,
+                                            stepValue: 5,
+                                            max: 100
+                                        },
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: 'Loading %'
+                                        }
+                                    }]
+                                }
+                            }
+                        };                        
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end row -->
+
+<!-- Upgrade Monitor -->
+<div class="col-sm-3" id="UpgradeDiv" style="visibility: hidden; float:right">
+    <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
+                <div style="float:left">
+                    <h4 id="monitorUpgradeH4" class="header-title m-t-0 m-b-30">Monitor - Upgrade</h4>
+                </div>
+            </div>
+            <div id="collapseDetail" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingDetail">
+                <div class="panel-body" style="margin-left: 5px;">
+                    <script src="http://chartjs.org/dist/2.9.3/Chart.min.js"></script>
+                    <script src="/static/js/ChartUtils.js"></script>
+                    <div style="width:100%;">
+                        <progress id="upgradeProgressDiv" max="100" value="0" style="width: 100%"></progress>
+                    </div>
+                    <div style="width:100%;">
+                        Downlaod Size: <span id='upgradeDownloadSize'>0</span> / <span id='upgradeTotalSize'>0</span> MB
+                    </div>
+                    <div style="width:100%;">
+                        Current Speed: <span id='upgradeCurrentSpeed'>0</span> KBps
+                    </div>
+                    <div style="width:100%;">
+                        Estimat Time: <span id='upgradeEstimateTime'>00:00</span>
+                    </div>
+                    <div style="width:100%;">
+                        Status: <span id='upgradeStatus'>unknow</span>
+                    </div>
+                    <div style="width:100%;">
+                        Updated At: <span id='upgradeUpdatedAt'>0000-00-00 00:00:00</span>
+                    </div>
+                    <script>
+                        var upgradeProgress = document.getElementById('upgradeProgressDiv');  
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end row -->
+
+<div class="row" style="visibility: hidden;">
+    <h4 class="header-title m-t-0 m-b-30">Receive:</h4>
+    <div id="log"></div>
+</div>
+
+<style>
+    /* The Modal (background) */
+    .modal {
+        display: none;
+        /* Hidden by default */
+        position: fixed;
+        /* Stay in place */
+        z-index: 1;
+        /* Sit on top */
+        padding-top: 100px;
+        /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%;
+        /* Full width */
+        height: 100%;
+        /* Full height */
+        overflow: auto;
+        /* Enable scroll if needed */
+        background-color: rgb(0, 0, 0);
+        /* Fallback color */
+        background-color: rgba(0, 0, 0, 0.4);
+        /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Modal Window for Software Upgrade  -->
+<div id="formSoftwareUpgrade" class="modal">
+    <div class="modal-content">
+        <span id="CloseFormSoftwareUpgrade" class="close">&times;</span>
+        <div style="margin:30px">
+            <table width="90%" align="center" border="0">
+                <tr>
+                    <td colspan="2" align="center"><label class="control-label">OTA Software Upgrade</label></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><br /></td>
+                </tr>
+                <tr>
+                    <td align="right" style="padding-right:10px"><label class="control-label">Download URL(*)</label>
+                    </td>
+                    <td><input id="downloadURL" type="text" class="form-control" placeholder="Download URL"
+                            value="https://thingspro.blob.core.windows.net/resource/ota-test/package_1.1.0-389-uc-8112a-me_armhf.yaml"
+                            required>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"><br /></td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="center"><button id="SubmitSoftwareUpgradeButton"
+                            class="btn btn-inverse waves-effect waves-light m-b-5">
+                            <i class="ti-save m-r-5"></i> <span>Submit</span> </button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Function based JavaScript -->
+<script type="text/javascript">
+
+    //----- Person buttons, function -----//
+    function LoadDeviceListIntoTable() {
+        for (var i in _deviceList) {
+            _deviceTable.row.add([
+                parseInt(i) + 1,
+                _deviceList[i].deviceId,
+                '--',
+                '--',
+                '--',
+                '--',
+                '--',
+                '--',
+                '--'
+            ]).draw(false);
+        }
+        _deviceTable.columns.adjust().draw();
+    }
+
+    function UpdateConnectionStatus(deviceId, connectionStatus) {
+        for (var j in _deviceList) {
+            if (_deviceList[j].deviceId == deviceId) {
+                var statusIcon = '';
+                if (connectionStatus == "Disconnected") {
+                    statusIcon = "<img src='/static/images/ball_gray.png' style='width:18px;height:18px;'> " + connectionStatus + "</img>";
+                } else {
+                    statusIcon = "<img src='/static/images/ball_green.png' style='width:18px;height:18px;'> " + connectionStatus + "</img>";
+                }
+                var newData = [
+                    _deviceTable.cell(j, 0).data(),
+                    _deviceTable.cell(j, 1).data(),
+                    _deviceTable.cell(j, 2).data(),
+                    statusIcon,
+                    _deviceTable.cell(j, 4).data(),
+                    _deviceTable.cell(j, 5).data(),
+                    _deviceTable.cell(j, 6).data(),
+                    _deviceTable.cell(j, 7).data(),
+                    _deviceTable.cell(j, 8).data()
+                ];
+                UpdateDataTableByRowId(j, newData);
+                break;
+            }
+        }
+    }
+
+    function UpdateReportProperties(deviceId, reportedProperties) {
+        for (var j in _deviceList) {
+            if (_deviceList[j].deviceId == deviceId) {
+                if (reportedProperties.hasOwnProperty('general')) {
+                    var newData = [
+                        _deviceTable.cell(j, 0).data(),
+                        _deviceTable.cell(j, 1).data(),
+                        reportedProperties.general.hostName,
+                        _deviceTable.cell(j, 3).data(),
+                        reportedProperties.general.modelName,
+                        reportedProperties.general.firmwareVersion,
+                        reportedProperties.general.thingsproVersion,
+                        _deviceTable.cell(j, 7).data(),
+                        _deviceTable.cell(j, 8).data()
+                    ];
+                    UpdateDataTableByRowId(j, newData);
+                    break;
+                }
+                if (_deviceList[j].deviceId == deviceId) {
+                    if (reportedProperties.hasOwnProperty('wan')) {
+                        var newData = [
+                            _deviceTable.cell(j, 0).data(),
+                            _deviceTable.cell(j, 1).data(),
+                            _deviceTable.cell(j, 2).data(),
+                            _deviceTable.cell(j, 3).data(),
+                            _deviceTable.cell(j, 4).data(),
+                            _deviceTable.cell(j, 5).data(),
+                            _deviceTable.cell(j, 6).data(),
+                            reportedProperties.wan.displayName,
+                            reportedProperties.wan.ip
+                        ];
+                        UpdateDataTableByRowId(j, newData);
+                        break;
+                    }
+                }
+                if (_deviceList[j].deviceId == deviceId) {
+                    if (reportedProperties.hasOwnProperty('installations')) {
+                        $('#upgradeStatus').html(reportedProperties.installations.state);
+
+                        if ((reportedProperties.installations.state == 'succeed') || (reportedProperties.installations.state == 'fail')) {
+                            _downloadRunning = false;
+                        }
+
+                        if (reportedProperties.installations.hasOwnProperty('tasks')) {
+                            for (var k in reportedProperties.installations.tasks) {
+                                if (reportedProperties.installations.tasks[k].type == 'download') {
+                                    var totalSize = (parseInt(reportedProperties.installations.tasks[k].totalSize));        
+                                    var progress = parseInt(reportedProperties.installations.tasks[k].progress);
+
+                                    if (!_downloadRunning) {
+                                        _downloadRunning = true;
+                                        _downloadStartTime = new Date();
+                                        $('#upgradeTotalSize').html(0);
+                                        $('#upgradeDownloadSize').html(0);
+                                        $('#upgradeCurrentSpeed').html(0);                                    
+                                        $('#upgradeEstimateTime').html('00:00:00');
+                                    }  
+
+                                    var eventTime = new Date();
+                                    var updatedAt = eventTime.getFullYear() + '-' + eventTime.getMonth() + '-' + eventTime.getDay() + ' ' + eventTime.getHours() + ':' + eventTime.getMinutes() + ':' + eventTime.getSeconds();
+                                    $('#upgradeUpdatedAt').html(updatedAt);
+
+                                    if (progress >0) {
+                                        var downloadSize = totalSize * (progress / 100);
+                                        var downloadDuration = (eventTime.getTime() - _downloadStartTime.getTime())/1000;                 //Diff in seconds
+                                        var downloadAvgSpeed = (downloadSize / downloadDuration);
+                                        var estimateRemainSeconds = Math.round((totalSize - downloadSize) / downloadAvgSpeed);                          //seconds 
+                                        upgradeProgress.value = progress;
+                                        $('#upgradeTotalSize').html(Math.round(totalSize/1000000));
+                                        $('#upgradeDownloadSize').html(Math.round(downloadSize/1000000));
+                                        $('#upgradeCurrentSpeed').html(Math.round(downloadAvgSpeed/1000));                                    
+                                        $('#upgradeEstimateTime').html(secondsToHHMMSS(estimateRemainSeconds));
+                                    }                                   
+                                    
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    function UpdateDeviceMonitor(deviceId, message) {
+        if (_deviceList[_selectedDeviceItem].deviceId == deviceId) {
+            if (message.tags.system.hasOwnProperty('memoryUsage')) {
+                memoryValue = parseInt(message.tags.system.memoryUsage.values[0].value);
+                memoryUpdatedAt = message.tags.system.memoryUsage.values[0].updateTimeStamp;
+
+                $('#monitorMemoryH4').html('Monitor - Memory : ' + memoryValue + '%')
+                config_Memory.data.datasets[0].data[0] = memoryValue
+                config_Memory.data.datasets[0].data[1] = 100 - memoryValue
+                window.myDoughnut.update();
+            }
+
+            if (message.tags.system.hasOwnProperty('cpuUsage')) {
+                cpuValue = message.tags.system.cpuUsage.values[0].value;
+                cpuUpdatedAt = message.tags.system.cpuUsage.values[0].updateTimeStamp;
+
+                $('#monitorCPUH4').html('Monitor - CPU : ' + cpuValue + '%')
+                config_CPU.data.labels.push(cpuUpdatedAt);
+                config_CPU.data.datasets[0].data.push(cpuValue);
+
+                if (config_CPU.data.datasets[0].data.length > 10) {
+                    config_CPU.data.labels.shift();
+                    config_CPU.data.datasets[0].data.shift();
+                }
+
+                window.myLine.update();
+            }
+        }
+    }
+
+    function LoadDeviceInfoIntoTable() {
+        for (var i in _deviceList) {
+            _processingDeviceItem = i;
+            $.ajax({
+                type: "GET",
+                url: "/api/v1/devices/" + _deviceList[i].deviceId + "/info?" + "t=" + Date.now(),
+                data: null,
+                cache: false,
+                contentType: "application/json",
+                processData: false,
+                success: function (data) {
+                    if (data != "None") {
+                        var reportedProperties = $.parseJSON(decodeHtml(data));
+                        for (var j in _deviceList) {
+                            if (_deviceList[j].deviceId == reportedProperties.deviceId) {
+                                var statusIcon = '';
+                                if (reportedProperties.connectionState == "Disconnected")
+                                    statusIcon = "<img src='/static/images/ball_gray.png' style='width:18px;height:18px;'> " + reportedProperties.connectionState + "</img>";
+                                else
+                                    statusIcon = "<img src='/static/images/ball_green.png' style='width:18px;height:18px;'> " + reportedProperties.connectionState + "</img>";
+                                var newData = [
+                                    _deviceTable.cell(j, 0).data(),
+                                    _deviceTable.cell(j, 1).data(),
+                                    reportedProperties.hostName,
+                                    statusIcon,
+                                    reportedProperties.modelName,
+                                    reportedProperties.firmwareVersion,
+                                    reportedProperties.thingsproVersion,
+                                    reportedProperties.wan,
+                                    reportedProperties.ip
+                                ];
+                                UpdateDataTableByRowId(j, newData);
+                                break;
+                            }
+                        }
+                    }
+                },
+                error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                    toastr["error"](thrownError);
+                }
+            });
+        }
+    }
+
+    function CleanConfigurationForm() {
+        $('#hostNameValue').val('');
+        $('#firmwareVersionValue').html('');
+        $('#thingsproVersionValue').html('');
+        $('#wanValue').html('');
+        $('#ipValue').html('');
+        $('#descriptionValue').val('');
+        $('#deviceTypeValue').html('');
+        $('#modelNameValue').html('');
+        $('#serialNumberValue').html('');
+        $('#ntpEnableValue').val('');
+        $('#ntpServerValue').val('');
+        $('#ntpIntervalValue').val('');
+        $('#timeZoneValue').val('');
+        $('#lastUpdatedAtValue').html('');
+        $('#statusValue').html('');
+    }
+
+    function LoadDeviceConfigurationIntoForm(deviceId) {
+        CleanConfigurationForm();
+        $.ajax({
+            type: "GET",
+            url: "/api/v1/devices/" + deviceId + "/configuration?" + "t=" + Date.now(),
+            data: null,
+            cache: false,
+            contentType: "application/json",
+            processData: false,
+            success: function (data) {
+                if (data != "None") {
+                    var configuration = $.parseJSON(decodeHtml(data));
+                    $('#hostNameValue').val(configuration.hostName);
+                    $('#firmwareVersionValue').html(configuration.firmwareVersion);
+                    $('#thingsproVersionValue').html(configuration.thingsproVersion);
+                    $('#wanValue').html(configuration.wan);
+                    $('#ipValue').html(configuration.ip);
+                    $('#descriptionValue').val(configuration.description);
+                    $('#deviceTypeValue').html(configuration.deviceType);
+                    $('#modelNameValue').html(configuration.modelName);
+                    $('#serialNumberValue').html(configuration.serialNumber);
+                    $('#ntpEnableValue').val(configuration.ntpEnable);
+                    $('#ntpServerValue').val(configuration.ntpServer);
+                    $('#ntpIntervalValue').val(configuration.ntpInterval);
+                    $('#timeZoneValue').val(configuration.timeZone);
+                    $('#lastUpdatedAtValue').html(configuration.lastUpdatedAt);
+                    if (configuration.status == "Waiting")
+                        $('#statusValue').html('<font color="red">Waiting Device Updating...</font>');
+                    else
+                        $('#statusValue').html('<font color="green">Latest</font>');
+                }
+            },
+            error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                toastr["error"](thrownError);
+            }
+        });
+    }
+
+    function UpdateDataTableByRowId(rowID, newData) {
+        var currentPageNum = _deviceTable.page.info().page;
+        _deviceTable.row(rowID).data(newData).page(currentPageNum).draw('page');
+    }
+
+    $('#MonitorEnableButton').click(function () {
+        swal({
+            title: "Turn on Device Monitor ?",
+            text: "This action send a Direct Method command to Azure IoT Hub to trigger device monitor task.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: 'btn-success waves-effect waves-light',
+            confirmButtonText: 'Submit!'
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $("body").css("cursor", "progress");
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/enableMonitor?" + "t=" + Date.now(),
+                    cache: false,
+                    contentType: "application/json",
+                    processData: false,
+                    success: function (data) {
+                        if (data != "OK") {
+                            toastr["error"]("Fail", data);
+                        } else {
+                            toastr["success"]("Success", "Submit to Azure IoT Hub");
+                            $('#MonitorEnableButton').prop('disabled', true);
+                            $('#MonitorDisableButton').prop('disabled', false);
+                        }
+                        $("body").css("cursor", "default");
+                    },
+                    error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                        toastr["error"](thrownError);
+                        $("body").css("cursor", "default");
+                    }
+                });
+            }
+        });
+    });
+
+    $('#MonitorDisableButton').click(function () {
+        $("body").css("cursor", "progress");
+        $.ajax({
+            type: "PUT",
+            url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/disableMonitor?" + "t=" + Date.now(),
+            cache: false,
+            contentType: "application/json",
+            processData: false,
+            success: function (data) {
+                if (data != "OK") {
+                    toastr["error"]("Fail", data);
+                } else {
+                    toastr["success"]("Success", "Submit to Azure IoT Hub");
+                    $('#MonitorEnableButton').prop('disabled', false);
+                    $('#MonitorDisableButton').prop('disabled', true);
+                }
+                $("body").css("cursor", "default");
+            },
+            error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                toastr["error"](thrownError);
+                $("body").css("cursor", "default");
+            }
+        });
+    });
+
+
+    $('#RebootDeviceButton').click(function () {
+        swal({
+            title: "Reboot Device ?",
+            text: "This action send a Direct Method command to Azure IoT Hub to trigger device reboot task.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: 'btn-success waves-effect waves-light',
+            confirmButtonText: 'Submit!'
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/reboot?" + "t=" + Date.now(),
+                    cache: false,
+                    contentType: "application/json",
+                    processData: false,
+                    success: function (data) {
+                        if (data != "OK")
+                            toastr["error"]("Fail", data);
+                        else
+                            toastr["success"]("Success", "Submit to Azure IoT Hub");
+                    },
+                    error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                        toastr["error"](thrownError);
+                    }
+                });
+            }
+        });
+    });
+
+    $('#SoftwareUpgradeButton').click(function () {
+        $('#formSoftwareUpgrade').show();
+    });
+
+    $('#CloseFormSoftwareUpgrade').click(function () {
+        $('#formSoftwareUpgrade').hide();
+    });
+
+    $('#SubmitSoftwareUpgradeButton').click(function () {
+        if ($("#downloadURL").val().length == 0) {
+            $("#downloadURL").focus();
+            swal("Invalid !", "Download URL is necessary.");
+            return;
+        }
+        var postData = {};
+        postData['downloadURL'] = $("#downloadURL").val();
+        postData['runInstallation'] = false;
+        var postJSON = JSON.stringify(postData);
+        $.ajax({
+            type: "PUT",
+            url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/upgrade?" + "t=" + Date.now(),
+            data: postJSON,
+            cache: false,
+            contentType: "application/json",
+            processData: false,
+            success: function (data) {
+                if (data != "OK")
+                    toastr["error"]("Fail", data);
+                else
+                    toastr["success"]("Success", "Submit to Azure IoT Hub");
+            },
+            error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                toastr["error"](thrownError);
+            }
+        });
+        $('#formSoftwareUpgrade').hide();
+    });
+
+    $('#UpdateDeviceConfigurationButton').click(function () {
+        var postData = new FormData();
+        postData.append('hostName', $("#hostNameValue").val());
+        postData.append('description', $("#descriptionValue").val());
+        postData.append('ntpEnable', $("#ntpEnableValue").val());
+        postData.append('ntpServer', $("#ntpServerValue").val());
+        postData.append('ntpInterval', $("#ntpIntervalValue").val());
+        postData.append('timeZone', $("#timeZoneValue").val());
+
+        var object = {};
+        postData.forEach(function (value, key) {
+            object[key] = value;
+        });
+        var postJSON = JSON.stringify(object);
+        swal({
+            title: "Update Device Configuration ?",
+            text: "This action send Desired Properties to Azure IoT Hub to update device's configuration.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: 'btn-success waves-effect waves-light',
+            confirmButtonText: 'Submit!'
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/configuration?" + "t=" + Date.now(),
+                    data: postJSON,
+                    cache: false,
+                    contentType: "application/json",
+                    processData: false,
+                    success: function (data) {
+                        toastr["success"]("Success", "Submit to Azure IoT Hub");
+                    },
+                    error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                        toastr["error"](thrownError);
+                    }
+                });
+            }
+        });
+    });
+
+    $('#JoinRoomButton').click(function () {
+        JoinRoom();
+    });
+    $('#LeaveRoomButton').click(function () {
+        LeaveRoom();
+    });
+    $('#DisconnectButton').click(function () {
+        Disconnect();
+    });
+    $('#RefreshDeviceListButton').click(function () {
+        RefreshdeviceListTable();
+        $('#configurateDiv').attr('style', 'visibility: hidden');
+        $('#maintenanceDiv').attr('style', 'visibility: hidden');
+        $('#memoryDiv').attr('style', 'visibility: hidden');
+        $('#CPUDiv').attr('style', 'visibility: hidden');
+        $('#UpgradeDiv').attr('style', 'visibility: hidden');
+        CleanConfigurationForm();
+    });
+
+    function RefreshdeviceListTable() {
+        CleandeviceListTable();
+        $.ajax({
+            type: "GET",
+            url: "/api/v1/devices?" + "t=" + Date.now(),
+            data: null,
+            cache: false,
+            contentType: "application/json",
+            processData: false,
+            success: function (data) {
+                _deviceList = $.parseJSON(decodeHtml(data));
+                LoadDeviceListIntoTable();
+                LoadDeviceInfoIntoTable();
+            },
+            error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                toastr["error"](thrownError);
+            }
+        });
+    }
+
+    function CleandeviceListTable() {
+        _deviceTable.clear().draw(false);
+        _selectedDeviceItem = null;
+    }
+    //----- End of Person Section----//
+
+
+
+    //----- Common Utility -----//
+    function decodeHtml(html) {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    }
+
+    function secondsToHHMMSS(totalSecond) {
+        if (isNaN(totalSecond))
+            return;
+        var hours = Math.floor(totalSecond / 3600);
+        var minutes = Math.floor((totalSecond - (hours * 3600)) / 60);
+        var seconds = totalSecond % 60;
+        if (hours < 10) { hours = "0" + hours; }
+        if (minutes < 10) { minutes = "0" + minutes; }
+        if (seconds < 10) { seconds = "0" + seconds; }
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
+    function EnableTableSelection() {
+        _deviceTable = $('#deviceListTable').DataTable();
+        $('#deviceListTable').on('click', 'tr', function () {
+            if ($(this).hasClass('selected')) {
+                //$(this).removeClass('selected');
+                //_selectedDeviceItem = null;
+                //alert('set personID to null at line 727')
+            }
+            else {
+                _deviceTable.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+                _selectedDeviceItem = _deviceTable.row(this).index();
+                $('#configurateDiv').attr('style', 'visibility: visible');
+                $('#maintenanceDiv').attr('style', 'visibility: visible');
+                $('#memoryDiv').attr('style', 'visibility: visible');
+                $('#CPUDiv').attr('style', 'visibility: visible');
+                $('#UpgradeDiv').attr('style', 'visibility: visible');
+                LoadDeviceConfigurationIntoForm(_deviceList[_selectedDeviceItem].deviceId);
+            }
+        });
+    }
+</script>
+
+<!-- Initialize App Script -->
+<script type="text/javascript">
+    var _deviceList = $.parseJSON(decodeHtml('{{deviceList}}'));
+    var _selectedDeviceItem = null;
+    var _timeIntervalCheckTrainStatus = null;
+
+    var _downloadStartTime = new Date(), _downloadRunning = false;
+
+    $(document).ready(function () {
+        EnableTableSelection();
+        LoadDeviceListIntoTable();
+        LoadDeviceInfoIntoTable();
+    });
+</script>
+
+{% endblock %}

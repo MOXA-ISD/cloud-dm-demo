@@ -1,0 +1,17 @@
+{
+    "azureResource": {
+        "IoTHubConnectionString": "",
+        "ServiceBusConnectionString": "",
+        "ServiceBusQueueName": "deviceactivity",
+        "StorageAccountConnectionString":"",
+        "StorageContainer":"iothub-eventhub",
+        "IoT-EventHubConnectionString":"",
+        "IoT-EventHubName":"thingsproedge",
+        "IoT-ConsumerGroup":"$Default"
+    },
+    "appSetting": {
+        "webAppURL":"http://127.0.0.1:8080/",
+        "rtMessageRoomId":"room001",
+        "thingsproAgentName": "thingspro-agent"
+    }
+}

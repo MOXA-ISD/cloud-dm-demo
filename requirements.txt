@@ -1,0 +1,14 @@
+azure_servicebus==0.21.1
+azure_storage==0.36.0
+click==6.7
+Flask==1.0.2
+Flask_SocketIO==3.3.1
+itsdangerous==0.24
+Jinja2==2.10
+MarkupSafe==1.0
+Werkzeug==0.14.1
+requests==2.20.0
+azure_common==1.1.12
+azure-nspkg==3.0.1
+ptvsd==3.2.1
+azure_eventhub==1.0.0
