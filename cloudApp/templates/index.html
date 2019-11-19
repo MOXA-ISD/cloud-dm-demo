@@ -642,6 +642,7 @@
 
                         if ((reportedProperties.installations.state == 'succeed') || (reportedProperties.installations.state == 'fail')) {
                             _downloadRunning = false;
+                            return;
                         }
 
                         if (reportedProperties.installations.hasOwnProperty('tasks')) {
@@ -692,9 +693,9 @@
                 memoryValue = parseInt(message.tags.system.memoryUsage.values[0].value);
                 memoryUpdatedAt = message.tags.system.memoryUsage.values[0].updateTimeStamp;
 
-                $('#monitorMemoryH4').html('Monitor - Memory : ' + memoryValue + '%')
-                config_Memory.data.datasets[0].data[0] = memoryValue
-                config_Memory.data.datasets[0].data[1] = 100 - memoryValue
+                $('#monitorMemoryH4').html('Monitor - Memory : ' + memoryValue + '%');
+                config_Memory.data.datasets[0].data[0] = memoryValue;
+                config_Memory.data.datasets[0].data[1] = 100 - memoryValue;
                 window.myDoughnut.update();
             }
 
@@ -776,6 +777,25 @@
         $('#timeZoneValue').val('');
         $('#lastUpdatedAtValue').html('');
         $('#statusValue').html('');
+    }
+
+    function CleanMonitorData() {        
+        $('#upgradeDownloadSize').html('0');
+        $('#upgradeTotalSize').html('0');
+        $('#upgradeCurrentSpeed').html('0');
+        $('#upgradeEstimateTime').html('00:00');
+        $('#upgradeStatus').val('unknow');
+        $('#upgradeUpdatedAt').html('0000-00-00 00:00:00');
+        upgradeProgress.value = 0;
+        $('#monitorMemoryH4').html('Monitor - Memory : ')
+        $('#monitorCPUH4').html('Monitor - CPU : ')
+
+        config_Memory.data.datasets[0].data[0] = 0;
+        config_Memory.data.datasets[0].data[1] = 100;
+        window.myDoughnut.update();
+        config_CPU.data.labels = [];
+        config_CPU.data.datasets[0].data = [];
+        window.myLine.update();
     }
 
     function LoadDeviceConfigurationIntoForm(deviceId) {
@@ -927,6 +947,7 @@
             swal("Invalid !", "Download URL is necessary.");
             return;
         }
+        upgradeProgress.value = 0;
         var postData = {};
         postData['downloadURL'] = $("#downloadURL").val();
         postData['runInstallation'] = false;
@@ -1076,6 +1097,7 @@
                 $('#CPUDiv').attr('style', 'visibility: visible');
                 $('#UpgradeDiv').attr('style', 'visibility: visible');
                 LoadDeviceConfigurationIntoForm(_deviceList[_selectedDeviceItem].deviceId);
+                CleanMonitorData();
             }
         });
     }
