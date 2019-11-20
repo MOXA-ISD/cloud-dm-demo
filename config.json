@@ -2,11 +2,11 @@
     "azureResource": {
         "IoTHubConnectionString": "",
         "ServiceBusConnectionString": "",
-        "ServiceBusQueueName": "deviceactivity",
+        "ServiceBusQueueName": "",
         "StorageAccountConnectionString":"",
         "StorageContainer":"iothub-eventhub",
         "IoT-EventHubConnectionString":"",
-        "IoT-EventHubName":"thingsproedge",
+        "IoT-EventHubName":"",
         "IoT-ConsumerGroup":"$Default"
     },
     "appSetting": {

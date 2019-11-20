@@ -638,11 +638,7 @@
                 }
                 if (_deviceList[j].deviceId == deviceId) {
                     if (reportedProperties.hasOwnProperty('installations')) {
-                        $('#upgradeStatus').html(reportedProperties.installations.state);
-
-                        if ((reportedProperties.installations.state == 'succeed') || (reportedProperties.installations.state == 'fail')) {
-                            _downloadRunning = false;
-                        }
+                        $('#upgradeStatus').html(reportedProperties.installations.state);                        
 
                         if (reportedProperties.installations.hasOwnProperty('tasks')) {
                             for (var k in reportedProperties.installations.tasks) {
@@ -678,6 +674,9 @@
                                     break;
                                 }
                             }
+                        }
+                        if ((reportedProperties.installations.state == 'succeed') || (reportedProperties.installations.state == 'fail')) {
+                            _downloadRunning = false;
                         }
                         break;
                     }

@@ -75,8 +75,12 @@ class HotdataReceiverMain:
         try:
             configFile = os.path.join(os.path.dirname((os.path.dirname(os.path.abspath(__file__)))), 'config.json')
             with open(configFile) as json_file:
-                config = json.load(json_file)
-                self.storageConnectionString = config['azureResource']['StorageAccountConnectionString']
+                config = json.load(json_file)                
+                nameValue = UtilityHelper.connectStringToDictionary(config['azureResource']['StorageAccountConnectionString'])
+                self.storageAccountName = nameValue['AccountName']
+                self.storageAccountKey = nameValue['AccountKey']
+                self.storageEndpointSuffix = nameValue['EndpointSuffix']
+
                 self.storageContainer = config['azureResource']['StorageContainer']
                 self.eventHubConnectionString = config['azureResource']['IoT-EventHubConnectionString']
                 self.eventHubName = config['azureResource']['IoT-EventHubName']        
@@ -85,6 +89,7 @@ class HotdataReceiverMain:
                 if (not self.webAppURL.endswith('/')):
                     self.webAppURL = self.webAppURL + '/'  
                 self.rtMessageRoomId = config['appSetting']['rtMessageRoomId']
+
         except:
             raise
         return
@@ -94,9 +99,12 @@ class HotdataReceiverMain:
         try:
             nameValue = UtilityHelper.connectStringToDictionary(self.eventHubConnectionString)
             nameSpace = UtilityHelper.getSubstring(nameValue['Endpoint'], '//', '.')
+            endpointSuffix = UtilityHelper.getSubstring(nameValue['Endpoint'], '.', '/')
             user = nameValue['SharedAccessKeyName']
             key = nameValue['SharedAccessKey']
-            ehConfig = EventHubConfig(nameSpace, self.eventHubName, user, key, consumer_group=self.consumerGroup)
+            ehConfig = EventHubConfig(nameSpace, self.eventHubName, user, key, 
+                consumer_group=self.consumerGroup,
+                namespace_suffix=endpointSuffix)
         except:
             raise
         return ehConfig
@@ -104,9 +112,11 @@ class HotdataReceiverMain:
     # CheckPoint Store Configuration
     def loadStorageManager(self):
         try:
-            nameValue = UtilityHelper.connectStringToDictionary(self.storageConnectionString)
             storageManager = AzureStorageCheckpointLeaseManager(
-                nameValue['AccountName'], nameValue['AccountKey'], self.storageContainer)
+                storage_account_name=self.storageAccountName, 
+                storage_account_key=self.storageAccountKey, 
+                lease_container_name=self.storageContainer)
+            
         except:
             raise
         return storageManager
@@ -124,11 +134,12 @@ class HotdataReceiverMain:
 
     # Clear Storage Old Data
     def clearStorageOldData(self):
-        secret = UtilityHelper.connectStringToDictionary(self.storageConnectionString)
         blobService = BlockBlobService(
-            account_name=secret['AccountName'],
-            account_key=secret['AccountKey']
+            account_name=self.storageAccountName,
+            account_key=self.storageAccountKey,
+            endpoint_suffix=self.storageEndpointSuffix
         )
+        
         blobs = blobService.list_blobs(self.storageContainer)
         for blob in blobs:
             blobService.delete_blob(self.storageContainer, blob.name)
@@ -162,6 +173,11 @@ class HotdataReceiverMain:
                 ep_params=[self.webAppURL,self.rtMessageRoomId],
                 eph_options=ehOptions,
                 loop=loop)
+
+            # Below line was must for China Azure
+            storageManager.storage_client = BlockBlobService(account_name=self.storageAccountName,
+                                                      account_key=self.storageAccountKey,
+                                                      endpoint_suffix=self.storageEndpointSuffix)
 
             tasks = asyncio.gather(
                 host.open_async(),

@@ -60,12 +60,12 @@ class programMain:
     # Input: 從 Service Bus 接收訊息
     # Ouput: 無
     def run(self):
-        msgQueue = ThingsProMessageBus(self.serviceBusConnectionString)
+        msgQueue = ThingsProMessageBus(self.serviceBusConnectionString, self.serviceBusQueueName)
         while True:
             try:
                 print("Waiting message ...")
-                message = msgQueue.readMessage(self.serviceBusQueueName)                
-                if message.body == None:
+                messages = msgQueue.readMessage()                
+                if messages == None:
                     #print('Get an empty message, pass it.')
                     continue
                 
@@ -73,39 +73,42 @@ class programMain:
                 time.sleep(30)
                 continue
             
-            try:
-                messageBody = message.body.decode("utf-8", "ignore")                
-                deviceId = message.custom_properties['deviceid']
-                moduleId = message.custom_properties['moduleid']
-                print("Received Message, DeviceID: " + deviceId + ", ModuleID: " + moduleId)
+            for message in messages:
+                try:
+                    message.user_properties = { y.decode('ascii'): message.user_properties.get(y).decode('ascii') for y in message.user_properties.keys() } 
+                                                  
+                    deviceId = message.user_properties.get('deviceId')
+                    moduleId = message.user_properties.get('moduleId')
+                    print("Received Message, DeviceID: " + deviceId + ", ModuleID: " + moduleId)
 
-                thingsproAgentFullId = deviceId + '/' + self.thingsProAgentName
-                messageJSON = json.loads(messageBody)
+                    thingsproAgentFullId = deviceId + '/' + self.thingsProAgentName
+                    print(str(message))
+                    messageJSON = json.loads(str(message))
 
-                # Rule1: thingspro-agent send reported properties, which means Edge is online
-                if moduleId == self.thingsProAgentName:
-                    if 'reported' in messageJSON['properties']:
-                        self.notifyEdgeConnectionChange(deviceId, 'Connected')
-                        self.notifyReportedPropertiesChange(deviceId, messageJSON['properties']['reported'])
+                    # Rule1: thingspro-agent send reported properties, which means Edge is online
+                    if moduleId == self.thingsProAgentName:
+                        if 'reported' in messageJSON['properties']:
+                            self.notifyEdgeConnectionChange(deviceId, 'Connected')
+                            self.notifyReportedPropertiesChange(deviceId, messageJSON['properties']['reported'])
+                        msgQueue.deleteMessage(message)
+                        continue
+
+                    # Rule2: edgeHub send reported properties, and indicate thingspro-agent's status, such as unknow, backoff
+                    if 'clients' in messageJSON['properties']['reported']:
+                        if thingsproAgentFullId in messageJSON['properties']['reported']['clients']:
+                            self.notifyEdgeConnectionChange(deviceId, messageJSON['properties']['reported']['clients'][thingsproAgentFullId]['status'])
+                    # Rule3: edgeHub send reported properties, and indicate thingspro-agent's status, such as Connected
+                    elif 'modules' in messageJSON['properties']['reported']:
+                        if self.thingsProAgentName in messageJSON['properties']['reported']['modules']:
+                            self.notifyEdgeConnectionChange(deviceId, messageJSON['properties']['reported']['modules'][_thingsProAgentName]['runtimeStatus'])                
+                    else:
+                        print("Skip message")
+
                     msgQueue.deleteMessage(message)
-                    continue
-
-                # Rule2: edgeHub send reported properties, and indicate thingspro-agent's status, such as unknow, backoff
-                if 'clients' in messageJSON['properties']['reported']:
-                    if thingsproAgentFullId in messageJSON['properties']['reported']['clients']:
-                        self.notifyEdgeConnectionChange(deviceId, messageJSON['properties']['reported']['clients'][thingsproAgentFullId]['status'])
-                # Rule3: edgeHub send reported properties, and indicate thingspro-agent's status, such as Connected
-                elif 'modules' in messageJSON['properties']['reported']:
-                    if self.thingsProAgentName in messageJSON['properties']['reported']['modules']:
-                        self.notifyEdgeConnectionChange(deviceId, messageJSON['properties']['reported']['modules'][_thingsProAgentName]['runtimeStatus'])                
-                else:
-                    print("Skip message")
-
-                msgQueue.deleteMessage(message)
-            except Exception as ex:
-                msgQueue.deleteMessage(message)
-                print('Exception: ' + str(ex) + '; message delete')
-                continue           
+                except Exception as ex:
+                    msgQueue.deleteMessage(message)
+                    print('Exception: ' + str(ex) + '; message delete')
+                    continue           
 
 # 程式開始
 main = programMain()
