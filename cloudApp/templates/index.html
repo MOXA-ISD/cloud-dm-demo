@@ -6,6 +6,7 @@
     var socket;
     var roomId = "{{rtMessageRoomId}}";
     $(document).ready(function () {
+        $('#ping-pong').text(Date().toString());
         namespace = '';
 
         // Connect to the Socket.IO server.           
@@ -35,7 +36,7 @@
                 return;
             } 
         });
-
+        
         // Interval function that tests message latency by sending a "ping"
         // message. The server then responds with a "pong" message and the
         // round trip time is measured.
@@ -52,7 +53,8 @@
             var latency = (new Date).getTime() - start_time;
             data1 = Math.round(10 * latency) / 10;
             data2 = Date().toString();
-            $('#ping-pong').text(data1.toString() + " ms; Time: " + data2);
+            //$('#ping-pong').text(data1.toString() + " ms; Time: " + data2);
+            $('#ping-pong').text(data2);
         });
     });
     function JoinRoom() {
@@ -83,7 +85,7 @@
                 <thead>
                     <tr>
                         <th>No</th>
-                        <th>Edge Name</th>
+                        <th>Gateway Name</th>
                         <th>Host Name</th>
                         <th>Status</th>
                         <th>Model Name</th>
@@ -100,7 +102,7 @@
 </div>
 
 <!-- Configurate -->
-<div class="row" id="configurateDiv" style="visibility: hidden;">
+<div class="row" id="configurateDiv" style="display: none;">
     <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
         <div class="panel panel-default">
             <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">
@@ -251,7 +253,7 @@
 <!-- end row -->
 
 <!-- Maintenance -->
-<div class="col-sm-2" id="maintenanceDiv" style="visibility:hidden; float: right;">
+<div class="col-sm-2" id="maintenanceDiv" style="display:none; float: right;">
     <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
         <div class="panel panel-default">
             <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
@@ -295,7 +297,7 @@
 </div>
 
 <!-- Memory Monitor-->
-<div class="col-sm-3" id="memoryDiv" style="visibility: hidden; float:right">
+<div class="col-sm-3" id="memoryDiv" style="display: none; float:right">
     <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
         <div class="panel panel-default">
             <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
@@ -359,7 +361,7 @@
 <!-- end row -->
 
 <!-- CPU Monitor -->
-<div class="col-sm-4" id="CPUDiv" style="visibility: hidden; float:right">
+<div class="col-sm-4" id="CPUDiv" style="display: none; float:right">
     <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
         <div class="panel panel-default">
             <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
@@ -434,7 +436,7 @@
 <!-- end row -->
 
 <!-- Upgrade Monitor -->
-<div class="col-sm-3" id="UpgradeDiv" style="visibility: hidden; float:right">
+<div class="col-sm-3" id="UpgradeDiv" style="display: none; float:right">
     <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
         <div class="panel panel-default">
             <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
@@ -472,9 +474,74 @@
         </div>
     </div>
 </div>
+<!-- FA Control Panel -->
+<div class="col-sm-4" id="FAControlDiv" style="display:none; float: right;">
+    <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
+                <div style="float:left">
+                    <h4 id="EditingPanelTitle" class="header-title m-t-0 m-b-30">Factory Control Panel</h4>
+                </div>
+            </div>
+            <div id="collapseDetail" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingDetail">
+                <div class="panel-body" style="margin-left: 5px;">
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="FireAlarmButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"> <span>Fire Alarm</span> </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="ReleaseAlarmButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"> <span>Release Alarm</span>
+                            </button>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Solar Control Panel -->
+<div class="col-sm-4" id="SolarControlDiv" style="display:none; float: right;">
+    <div class="panel-group" id="accordion" 2 role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingDetail" style="height: 60px;">                
+                <div style="float:left">
+                    <h4 id="EditingPanelTitle" class="header-title m-t-0 m-b-30">Solar Control Panel</h4>
+                </div>
+            </div>
+            <div id="collapseDetail" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingDetail">
+                <div class="panel-body" style="margin-left: 5px;">
+                    <label for="eEquipId" class="col-sm-3 control-label">
+                        Control Value :
+                    </label>
+                    <div class="col-sm-3">
+                        <input id="solarControlValue" type="text" value="" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="EnableControlButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"> <span>Enable Control</span> </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div style="float:left">
+                            <button id="DisableControlButton" class="btn btn-inverse waves-effect waves-light m-b-5"
+                                style="width:140px;"> <span>Disable Control</span>
+                            </button>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- end row -->
 
-<div class="row" style="visibility: hidden;">
+<div class="row" style="display: none;">
     <h4 class="header-title m-t-0 m-b-30">Receive:</h4>
     <div id="log"></div>
 </div>
@@ -813,7 +880,7 @@
                     $('#thingsproVersionValue').html(configuration.thingsproVersion);
                     $('#wanValue').html(configuration.wan);
                     $('#ipValue').html(configuration.ip);
-                    $('#descriptionValue').val(configuration.description);
+                    $('#descriptionValue').val(configuration.description);                
                     $('#deviceTypeValue').html(configuration.deviceType);
                     $('#modelNameValue').html(configuration.modelName);
                     $('#serialNumberValue').html(configuration.serialNumber);
@@ -822,10 +889,37 @@
                     $('#ntpIntervalValue').val(configuration.ntpInterval);
                     $('#timeZoneValue').val(configuration.timeZone);
                     $('#lastUpdatedAtValue').html(configuration.lastUpdatedAt);
+
+                    if (configuration.description.toLowerCase().startsWith('factory')) {
+                        $('#FAControlDiv').attr('style', 'display: inline');
+                        $('#SolarControlDiv').attr('style', 'display: none');
+                    } else if (configuration.description.toLowerCase().startsWith('solar')) {
+                        $('#FAControlDiv').attr('style', 'display: none');
+                        $('#SolarControlDiv').attr('style', 'display: inline');
+                    } else {
+                        $('#FAControlDiv').attr('style', 'display: none');
+                        $('#SolarControlDiv').attr('style', 'display: none');
+                    }
+
                     if (configuration.status == "Waiting")
                         $('#statusValue').html('<font color="red">Waiting Device Updating...</font>');
                     else
                         $('#statusValue').html('<font color="green">Latest</font>');
+
+                    $('#configurateDiv').attr('style', 'display: inline');
+                    $('#maintenanceDiv').attr('style', 'display: inline');
+                    $('#memoryDiv').attr('style', 'display: inline');
+                    $('#CPUDiv').attr('style', 'display: inline');
+                    $('#UpgradeDiv').attr('style', 'display: inline');
+                    CleanMonitorData();
+                } else {
+                    $('#configurateDiv').attr('style', 'display: none');
+                    $('#maintenanceDiv').attr('style', 'display: none');
+                    $('#memoryDiv').attr('style', 'display: none');
+                    $('#CPUDiv').attr('style', 'display: none');
+                    $('#UpgradeDiv').attr('style', 'display: none');
+                    $('#FAControlDiv').attr('style', 'display: none');
+                    $('#SolarControlDiv').attr('style', 'display: none');
                 }
             },
             error: function (XMLHttpRequest, ajaxOptions, thrownError) {
@@ -931,6 +1025,159 @@
         });
     });
 
+    $('#FireAlarmButton').click(function () {
+        swal({
+            title: "Fire Alarm on Device ?",
+            text: "This action send a Direct Method command to Azure IoT Hub to turn on an alarm on device.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: 'btn-success waves-effect waves-light',
+            confirmButtonText: 'Submit!'
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $("body").css("cursor", "progress");
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/fireAlarm?" + "t=" + Date.now(),
+                    cache: false,
+                    contentType: "application/json",
+                    processData: false,
+                    success: function (data) {
+                        if (data != "OK") {
+                            toastr["error"]("Fail", data);
+                        } else {
+                            toastr["success"]("Success", "Submit to Azure IoT Hub");
+                            $('#MonitorEnableButton').prop('disabled', true);
+                            $('#MonitorDisableButton').prop('disabled', false);
+                        }
+                        $("body").css("cursor", "default");
+                    },
+                    error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                        toastr["error"](thrownError);
+                        $("body").css("cursor", "default");
+                    }
+                });
+            }
+        });
+    });
+
+    $('#ReleaseAlarmButton').click(function () {
+        swal({
+            title: "Release Alarm on Device ?",
+            text: "This action send a Direct Method command to Azure IoT Hub to turn off an alarm on device.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: 'btn-success waves-effect waves-light',
+            confirmButtonText: 'Submit!'
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $("body").css("cursor", "progress");
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/releaseAlarm?" + "t=" + Date.now(),
+                    cache: false,
+                    contentType: "application/json",
+                    processData: false,
+                    success: function (data) {
+                        if (data != "OK") {
+                            toastr["error"]("Fail", data);
+                        } else {
+                            toastr["success"]("Success", "Submit to Azure IoT Hub");
+                            $('#MonitorEnableButton').prop('disabled', true);
+                            $('#MonitorDisableButton').prop('disabled', false);
+                        }
+                        $("body").css("cursor", "default");
+                    },
+                    error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                        toastr["error"](thrownError);
+                        $("body").css("cursor", "default");
+                    }
+                });
+            }
+        });
+    });
+
+    $('#EnableControlButton').click(function () {
+        if ($("#solarControlValue").val().length == 0) {
+            $("#solarControlValue").focus();
+            swal("Invalid !", "Control Value is necessary.");
+            return;
+        }        
+        var postData = {};
+        postData['solarControlValue'] = $("#solarControlValue").val();
+        var postJSON = JSON.stringify(postData);
+        swal({
+            title: "Enable Remote Control Device ?",
+            text: "This action send a control command and value to device.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: 'btn-success waves-effect waves-light',
+            confirmButtonText: 'Submit!'
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $("body").css("cursor", "progress");
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/enableRemoteControl?" + "t=" + Date.now(),
+                    data: postJSON,
+                    cache: false,
+                    contentType: "application/json",
+                    processData: false,
+                    success: function (data) {
+                        if (data != "OK") {
+                            toastr["error"]("Fail", data);
+                        } else {
+                            toastr["success"]("Success", "Submit to Azure IoT Hub");
+                            $('#MonitorEnableButton').prop('disabled', true);
+                            $('#MonitorDisableButton').prop('disabled', false);
+                        }
+                        $("body").css("cursor", "default");
+                    },
+                    error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                        toastr["error"](thrownError);
+                        $("body").css("cursor", "default");
+                    }
+                });
+            }
+        });
+    });
+
+    $('#DisableControlButton').click(function () {
+        swal({
+            title: "Disable Remote Control Device ?",
+            text: "This action will release remote control on device.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: 'btn-success waves-effect waves-light',
+            confirmButtonText: 'Submit!'
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $("body").css("cursor", "progress");
+                $.ajax({
+                    type: "PUT",
+                    url: "/api/v1/devices/" + _deviceList[_selectedDeviceItem].deviceId + "/disableRemoteControl?" + "t=" + Date.now(),
+                    cache: false,
+                    contentType: "application/json",
+                    processData: false,
+                    success: function (data) {
+                        if (data != "OK") {
+                            toastr["error"]("Fail", data);
+                        } else {
+                            toastr["success"]("Success", "Submit to Azure IoT Hub");
+                            $('#MonitorEnableButton').prop('disabled', true);
+                            $('#MonitorDisableButton').prop('disabled', false);
+                        }
+                        $("body").css("cursor", "default");
+                    },
+                    error: function (XMLHttpRequest, ajaxOptions, thrownError) {
+                        toastr["error"](thrownError);
+                        $("body").css("cursor", "default");
+                    }
+                });
+            }
+        });
+    });
+
     $('#SoftwareUpgradeButton').click(function () {
         $('#formSoftwareUpgrade').show();
     });
@@ -1022,11 +1269,13 @@
     });
     $('#RefreshDeviceListButton').click(function () {
         RefreshdeviceListTable();
-        $('#configurateDiv').attr('style', 'visibility: hidden');
-        $('#maintenanceDiv').attr('style', 'visibility: hidden');
-        $('#memoryDiv').attr('style', 'visibility: hidden');
-        $('#CPUDiv').attr('style', 'visibility: hidden');
-        $('#UpgradeDiv').attr('style', 'visibility: hidden');
+        $('#configurateDiv').attr('style', 'display: none');
+        $('#maintenanceDiv').attr('style', 'display: none');
+        $('#memoryDiv').attr('style', 'display: none');
+        $('#CPUDiv').attr('style', 'display: none');
+        $('#UpgradeDiv').attr('style', 'display: none');
+        $('#FAControlDiv').attr('style', 'display: none');
+        $('#SolarControlDiv').attr('style', 'display: none');
         CleanConfigurationForm();
     });
 
@@ -1089,13 +1338,7 @@
                 _deviceTable.$('tr.selected').removeClass('selected');
                 $(this).addClass('selected');
                 _selectedDeviceItem = _deviceTable.row(this).index();
-                $('#configurateDiv').attr('style', 'visibility: visible');
-                $('#maintenanceDiv').attr('style', 'visibility: visible');
-                $('#memoryDiv').attr('style', 'visibility: visible');
-                $('#CPUDiv').attr('style', 'visibility: visible');
-                $('#UpgradeDiv').attr('style', 'visibility: visible');
                 LoadDeviceConfigurationIntoForm(_deviceList[_selectedDeviceItem].deviceId);
-                CleanMonitorData();
             }
         });
     }

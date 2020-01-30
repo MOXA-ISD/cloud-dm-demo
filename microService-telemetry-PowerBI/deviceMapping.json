@@ -1,0 +1,35 @@
+[
+    {
+        "deviceId":"Iot_in_Action_001",
+        "pushURL":"https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/fb655df2-c086-4105-ba58-435f5d960e97/rows?key=2BTIVSbidBWeHHGEhCiouc9s5qab9rIluporFg6R5YXG1%2FNOnrS2xQVNFA%2FD576jg4a5hmCXU7lZt99Gwk54OQ%3D%3D"
+    },
+    {
+        "deviceId":"Iot_in_Action_002",
+        "pushURL": "https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/e5010659-33f6-465f-86e4-ac94ef70aa6c/rows?key=aNCB91u7ZakiXaOorW2B%2FTaEp5E5930J%2F4tZwRrMSMy1rSKcRRzigvaNzuj2SeBK3CFkpRJDIlxSkRtwsI7PXw%3D%3D"
+    },
+    {
+        "deviceId": "Iot_in_Action_003",
+        "pushURL": "https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/c0dd318e-b69b-4e0c-b05b-845e783c7b6e/rows?key=SIWMkQhTxGBAa3ona3C2mI5GkBWGgqEqo%2BtP3GMVZwzAHp4pRIX9fHUVzgb9mncjP%2Bk48BXmGkq2xDfj9R0%2Fag%3D%3D"
+    },
+    {
+        "deviceId": "Iot_in_Action_004",
+        "pushURL": "https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/629b9db6-e6e1-4fa1-a19b-032b883c199b/rows?key=GVxH4lo5KVOAZM38hIMrdhiIAJr%2FMHwuPxrFm5CO1PfJ%2FJaLyXa8vTbm56Nk6qOrYJylfzXkdTMEdxaFWER3Qw%3D%3D"
+    },
+    {
+        "deviceId": "iotinaction",
+        "pushURL": "https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/8763a935-9557-41dd-a771-71d92614b130/rows?key=1%2BND57%2BC0aqxe3w1LqCm1dBlgBVFGEmz1k7b7M7BXlchPwgLrJJGG%2Fi7C6IXVVt12OwTcQWiLFG%2BX8p2VNttDA%3D%3D"
+    },
+    {
+        "deviceId": "IoT-Action-Robert",
+        "pushURL": "https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/c0ad88fc-66fc-4a32-b379-65428cea60e9/rows?key=rDVPIQqTfGNRkrCANdF%2F2ZFK5LaS4aE7O9BjiZnis5D78yzztMKWM3aPKrD6dIN0N%2BkFp8hU8Yg1T6Y8d%2FrQAA%3D%3D"
+    },
+    {
+        "deviceId": "MUS-IoT-Action-1",
+        "pushURL": "https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/26cf0c56-a61a-4401-9594-8cf387fe0ad3/rows?key=88blJ1Rl9%2B5Dk2McZoDNhDwizN1fftpuQybue2LOZIMIeoESaLcyyUTzDK7xM42WhwN7%2Fr8U79W7YE11y4pMSw%3D%3D"
+    },
+    {
+        "deviceId": "demokit-001",
+        "pushURL": "https://api.powerbi.com/beta/5571c7d4-286b-47f6-9dd5-0aa688773c8e/datasets/270d4913-d882-447b-9e71-eabd2c7c2f65/rows?noSignUpCheck=1&key=M657NCli3n%2BnWSZnh9SfuIhEo12aXrNRJ90mrPmLGqe4HvLtw2odiHnAfvgA6Gl9plxe%2Bs5XB%2BAuRxRmqlZo6Q%3D%3D"
+    }
+ 
+]

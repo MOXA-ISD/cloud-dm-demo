@@ -12,6 +12,7 @@ class ThingsProEdge:
         self.d2cMessagePolicy = json.loads('{"groups":[{"enable":true,"outputTopic":"sample","properties":[{"key":"messageType","value":"deviceMonitor"}],"tags":[{"srcName":"system","tagNames":["cpuUsage","memoryUsage"]}],"pollingInterval":5,"sendOutThreshold":{"size":4096,"time": 0}}]}')
         self.upgradeSoftwarePolicy = json.loads('{"downloadURL": "", "runInstallation": false}')
         self.universalDirectMethodPayload = json.loads('{"path":"", "method": "", "headers":[{"Content-Type":"application/json"}], "requestBody":""}')
+        self.demokit2020DirectMethodPayload = json.loads('{"path":"/demokit", "method": "PUT", "headers":[{"Content-Type":"application/json"}], "requestBody":""}')
         
     # List Azure IoT DeviceID, filter by IoT Edge capability
     def getThingsProEdgeList(self):
@@ -52,6 +53,7 @@ class ThingsProEdge:
             deviceInfo = dict()
             if (reportedProperties != None):
                 deviceInfo['hostName'] = reportedProperties['general']['hostName']
+                deviceInfo['description'] = reportedProperties['general']['description']
                 deviceInfo['modelName'] = reportedProperties['general']['modelName']
                 deviceInfo['firmwareVersion'] = reportedProperties['general']['firmwareVersion']
                 deviceInfo['thingsproVersion'] = reportedProperties['general']['thingsproVersion']
@@ -189,13 +191,74 @@ class ThingsProEdge:
        
     
     def monitorDevice(self, deviceId, turnOn):
+        msgPolicyId = None
+        try:
+            getCurrentD2CMessageList = json.loads('{"path":"/azure-iotedge/messages", "method": "GET", "headers":[{"Content-Type":"application/json"}], "requestBody":""}')
+            status, content = self.azureIoTHub.callModuleDirectMethod(deviceId, self.thingsproAgentId, 'thingspro-api-v1', getCurrentD2CMessageList)
+            if (status == 200):
+                msgPolicyList = json.loads(content)
+                print('1:' + content)
+                if msgPolicyList['payload']['data'] == None:
+                    msgPolicyId = None
+                else:
+                    for msgPolicy in msgPolicyList['payload']['data']:
+                        if msgPolicy['outputTopic'] == 'demokitMonitor':
+                            msgPolicyId = msgPolicy['id']
+                            break                        
+            elif (status == 404):
+                return 'thingspro-agent not found or device was offline'
+            else: 
+                return str(status)
+
+            D2CMessage = None
+            if msgPolicyId == None:
+                D2CMessage = json.loads('{"path":"/azure-iotedge/messages", "method": "POST", "headers":[{"Content-Type":"application/json"}], "requestBody":""}')
+                if turnOn:
+                    D2CMessage['requestBody'] = '{"enable":true,"properties":[{"key":"messageType","value":"deviceMonitor"}],"tags":[{"srcName":"system","tagNames":["memoryUsage","cpuUsage"]}],"outputTopic":"demokitMonitor","pollingInterval":5,"sendOutThreshold":{"size":4096,"time":0}}'                
+                else:
+                    D2CMessage['requestBody'] = '{"enable":false,"properties":[{"key":"messageType","value":"deviceMonitor"}],"tags":[{"srcName":"system","tagNames":["memoryUsage","cpuUsage"]}],"outputTopic":"demokitMonitor","pollingInterval":5,"sendOutThreshold":{"size":4096,"time":0}}'                
+            else:
+                D2CMessage = json.loads('{"path":"/azure-iotedge/messages/' + str(msgPolicyId) + '", "method": "PUT", "headers":[{"Content-Type":"application/json"}], "requestBody":""}')
+                if turnOn:
+                    D2CMessage['requestBody'] = '{"enable":true,"properties":[{"key":"messageType","value":"deviceMonitor"}],"tags":[{"srcName":"system","tagNames":["memoryUsage","cpuUsage"]}],"outputTopic":"demokitMonitor","pollingInterval":5,"sendOutThreshold":{"size":4096,"time":0}}'                
+                else:
+                    D2CMessage['requestBody'] = '{"enable":false,"properties":[{"key":"messageType","value":"deviceMonitor"}],"tags":[{"srcName":"system","tagNames":["memoryUsage","cpuUsage"]}],"outputTopic":"demokitMonitor","pollingInterval":5,"sendOutThreshold":{"size":4096,"time":0}}'                
+
+            status, content = self.azureIoTHub.callModuleDirectMethod(deviceId, self.thingsproAgentId, 'thingspro-api-v1', D2CMessage)
+            if (status == 200):
+                return 'OK'
+            elif (status == 404):
+                return 'thingspro-agent not found or device was offline'
+            else: 
+                return str(status) 
+        except Exception as exp:
+            return str(exp)
+    
+    def setDeviceAlarm(self, deviceId, turnOn):
         try:
             if turnOn:
-                self.d2cMessagePolicy['groups'][0]['enable'] = True
+                self.demokit2020DirectMethodPayload['requestBody'] = '{"alarm": true,"remoteControl": false,"controlValue": 0}'
             else:
-                self.d2cMessagePolicy['groups'][0]['enable'] = False
+                self.demokit2020DirectMethodPayload['requestBody'] = '{"alarm": false,"remoteControl": false,"controlValue": 0}'
 
-            status, content = self.azureIoTHub.callModuleDirectMethod(deviceId, self.thingsproAgentId, 'message-policy-put', self.d2cMessagePolicy)
+            status, content = self.azureIoTHub.callModuleDirectMethod(deviceId, self.thingsproAgentId, 'thingspro-api-v1', self.demokit2020DirectMethodPayload)
+            if (status == 200):
+                return 'OK'
+            elif (status == 404):
+                return 'thingspro-agent not found or device was offline'
+            else: 
+                return str(status) 
+        except Exception as exp:
+            return str(exp)
+
+    def setRemoteControl(self, deviceId, turnOn, controlValue):
+        try:
+            if turnOn:
+                self.demokit2020DirectMethodPayload['requestBody'] = '{"alarm": false,"remoteControl": true,"controlValue":' + str(controlValue) + '}'
+            else:
+                self.demokit2020DirectMethodPayload['requestBody'] = '{"alarm": false,"remoteControl": false,"controlValue": 0}'
+
+            status, content = self.azureIoTHub.callModuleDirectMethod(deviceId, self.thingsproAgentId, 'thingspro-api-v1', self.demokit2020DirectMethodPayload)
             if (status == 200):
                 return 'OK'
             elif (status == 404):

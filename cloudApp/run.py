@@ -111,6 +111,36 @@ def monitorDeviceDisable(deviceId):
     #print(result)
     return result
 
+#put /api/v1/devices/<string:deviceId>/fireAlarm
+@app.route('/api/v1/devices/<string:deviceId>/fireAlarm', methods=['PUT'])
+def fireAlarm(deviceId):
+    result = _cloudApp.setDeviceAlarm(deviceId, True)
+    #print(result)
+    return result
+
+#put /api/v1/devices/<string:deviceId>/releaseAlarm
+@app.route('/api/v1/devices/<string:deviceId>/releaseAlarm', methods=['PUT'])
+def releaseAlarm(deviceId):
+    result = _cloudApp.setDeviceAlarm(deviceId, False)
+    #print(result)
+    return result
+
+#put /api/v1/devices/<string:deviceId>/enableRemoteControl
+@app.route('/api/v1/devices/<string:deviceId>/enableRemoteControl', methods=['PUT'])
+def enableRemoteControl(deviceId):
+    postData = request.get_json(silent=True)
+    print(postData['solarControlValue'])
+    result = _cloudApp.setRemoteControl(deviceId, True, postData['solarControlValue'])
+    #print(result)
+    return result
+
+#put /api/v1/devices/<string:deviceId>/disableRemoteControl
+@app.route('/api/v1/devices/<string:deviceId>/disableRemoteControl', methods=['PUT'])
+def disableRemoteControl(deviceId):
+    result = _cloudApp.setRemoteControl(deviceId, False, None)
+    #print(result)
+    return result
+
 @socketio.on('join', namespace='')
 def join(message):
     join_room(message['room'])
